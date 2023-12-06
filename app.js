@@ -32,31 +32,52 @@ app.get("/users",(req,res)=> {
     });
 });
 
-app.post("/users",async(req,res)=>{   
-    try{
-        const salt = await bcrypt.genSalt(10);
-        const hashedPasssword = await bcrypt.hash(req.body.password, salt);
-        console.log(salt) // bisa diapus
-        console.log(hashedPasssword) //bisa diapus
-        const user ={ 
-            name:req.body.name, 
-            email:req.body.email, 
-            password:hashedPasssword
-        };
-        db.query('INSERT INTO users SET ?', user, (error, result) => {
+app.post("/users", async (req, res) => {
+    try {
+        const existingUser = await getUserByEmail(req.body.email);
+
+        if (existingUser) {
+            // Email sudah terdaftar, kirim respons yang sesuai
+            res.status(400).send("Email is already registered");
+        } else {
+            // Lanjutkan dengan pendaftaran baru
+            const salt = await bcrypt.genSalt(10);
+            const hashedPassword = await bcrypt.hash(req.body.password, salt);
+
+            const newUser = {
+                name: req.body.name,
+                email: req.body.email,
+                password: hashedPassword
+            };
+
+            db.query('INSERT INTO users SET ?', newUser, (error, result) => {
+                if (error) {
+                    console.log(error);
+                    res.status(500).send("Internal Server Error");
+                } else {
+                    console.log(result);
+                    res.status(201).send("User Created");
+                }
+            });
+        }
+    } catch (error) {
+        console.log(error);
+        res.status(500).send("Internal Server Error");
+    }
+});
+
+async function getUserByEmail(email) {
+    return new Promise((resolve, reject) => {
+        db.query('SELECT * FROM users WHERE email = ?', email, (error, results) => {
             if (error) {
-                console.log(error);
-                res.status(500).send("Internal Server Error");
+                reject(error);
             } else {
-                console.log(result);
-                res.status(201).send("User Created");
+                resolve(results[0]);
             }
         });
-    }
-    catch{
-        res.status(500);
-    }
-})
+    });
+} // DARI CHATGPT INI!!!
+
 
 app.post("/users/login", async (req, res) => {
     const email = req.body.email;
@@ -81,6 +102,22 @@ app.post("/users/login", async (req, res) => {
         }
     });
 });
+
+app.delete("/users/:userId", (req, res) => {
+    const userId = req.params.userId;
+
+    db.query('DELETE FROM users WHERE id = ?', userId, (error, result) => {
+        if (error) {
+            console.log(error);
+            res.status(500).send("Internal Server Error");
+        } else if (result.affectedRows > 0) {
+            res.send(`User with ID ${userId} deleted successfully`);
+        } else {
+            res.status(404).send(`User with ID ${userId} not found`);
+        }
+    });
+});
+
 process.on('SIGINT', () => {
     db.end((err) => {
         console.log('Database connection closed.');
