@@ -1,3 +1,3 @@
 login auth biasa hashing-salt 
 dengan rest client sebagai penguji API
-buat db jantune_logn dan table users mysql
+buat db jantune_login dan table users mysql
