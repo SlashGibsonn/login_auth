@@ -7,17 +7,33 @@ Content-Type: application/json
 
 {
     "name": "mario",
-    "email": "mario@gmail.com",
-    "password": "meki"
+    "email": "mari@gmail.com",
+    "password": "ada"
 }
 ###
 POST http://localhost:8000/users/login
 Content-Type: application/json
 
 {
-    "email": "mario@gmail.com",
-    "password": "meki"
+    "email": "mar@gmail.com",
+    "password": "ada"
 }
 
 ###
 DELETE http://localhost:8000/users/17
+
+###
+POST http://localhost:8000/users/forgot-password
+Content-Type: application/json
+
+{
+    "email": "mario@gmail.com"
+}
+
+###
+POST http://localhost:8000/users/reset-password/3dbfa8af0e7e27acafc4862be0cf6b04c512119b
+Content-Type: application/json
+
+{
+    "newPassword": "kontolayam"
+}
